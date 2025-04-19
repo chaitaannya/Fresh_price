@@ -4,6 +4,7 @@ import numpy as np
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import joblib
 import matplotlib.pyplot as plt
+from datetime import date, datetime
 
 # --- Page Config ---
 st.set_page_config(page_title="Fresh Price Forecast", layout="centered")
@@ -45,68 +46,66 @@ if df is not None:
         df = df.ffill()
 
         st.markdown("---")
-        st.subheader("📦 Select a Commodity")
+        st.subheader("📦 Select Forecast Options")
 
-        col1, col2 = st.columns([4, 1])
+        # Select options
+        col1, col2, col3 = st.columns(3)
+
         with col1:
             commodities = df.columns.tolist()
-            selected_commodity = st.selectbox("", commodities)
+            selected_commodity = st.selectbox("🧺 Commodity", commodities)
 
         with col2:
-            forecast_button = st.button("📊 Predict ")
+            selected_state = st.selectbox("🌍 State", ["Punjab", "Maharashtra", "Karnataka", "UP", "Tamil Nadu"])  # example
+
+        with col3:
+            selected_date = st.date_input("📅 Date", min_value=date.today())
+
+        forecast_button = st.button("📊 Predict")
 
         if forecast_button:
             st.markdown("---")
-            st.subheader(f"🔮 {selected_commodity} Price Forecast (2025–2029)")
+            st.subheader(f"🔮 Forecast for: {selected_commodity}")
+            st.markdown(f"**📅 Date Chosen:** `{selected_date}`")
+            st.markdown(f"**📍 State Selected:** `{selected_state}`")
 
+            # Train SARIMAX
             data = df[selected_commodity]
-
             model_sarimax = SARIMAX(data, order=(1, 1, 1), seasonal_order=(1, 1, 0, 12))
             sarimax_model = model_sarimax.fit(disp=False)
 
-            forecast = sarimax_model.get_forecast(steps=60)
+            # Forecast for next 60 months
+            forecast_steps = 60
+            forecast = sarimax_model.get_forecast(steps=forecast_steps)
             forecasted_values = forecast.predicted_mean
-            forecast_years = pd.date_range(start="2025-01", periods=60, freq="M")
+            forecast_dates = pd.date_range(start="2025-01-01", periods=forecast_steps, freq="M")
 
             forecast_df = pd.DataFrame({
-                "Year": forecast_years,
+                "Date": forecast_dates,
                 f"{selected_commodity}_Forecast": forecasted_values
             })
 
-            st.dataframe(forecast_df, use_container_width=True)
+            # Find nearest forecasted date
+            selected_datetime = pd.to_datetime(selected_date)
+            nearest_date = forecast_df["Date"].iloc[(forecast_df["Date"] - selected_datetime).abs().argsort()[:1]].values[0]
+            forecast_value = forecast_df.loc[forecast_df["Date"] == nearest_date, f"{selected_commodity}_Forecast"].values[0]
 
-            # Plot
+            st.success(f"📈 Predicted price for **{selected_commodity}** in **{selected_state}** on **{pd.to_datetime(nearest_date).date()}** is: ₹ `{forecast_value:.2f}`")
+
+            # Plot full forecast with selected date marked
             fig, ax = plt.subplots(figsize=(10, 5))
-            ax.plot(data, label=f"Actual {selected_commodity} Prices")
-            ax.plot(forecast_years, forecasted_values, label="Forecasted Prices", color="orange")
+            ax.plot(data, label=f"Historical {selected_commodity} Prices")
+            ax.plot(forecast_dates, forecasted_values, label="Forecasted Prices", color="orange")
+            ax.axvline(x=nearest_date, color="red", linestyle="--", label="Selected Date")
             ax.set_title(f"{selected_commodity} Price Forecast (2025–2029)", fontsize=14)
             ax.set_xlabel("Year")
             ax.set_ylabel("Price")
             ax.legend()
             st.pyplot(fig)
 
+            # Training RMSE
             train_rmse = np.sqrt(np.mean((data - sarimax_model.fittedvalues) ** 2))
             st.info(f"📉 Training RMSE: `{train_rmse:.4f}`")
 
     except Exception as e:
         st.error(f"⚠️ Error during forecasting: {e}")
-
-# --- Optional ML Prediction UI (Template, Still Commented) ---
-# if model is not None:
-#     st.markdown("---")
-#     st.subheader("🤖 Predict with ML Model")
-
-#     col1, col2 = st.columns(2)
-#     with col1:
-#         feature1 = st.number_input("Feature 1", value=0.0)
-#     with col2:
-#         feature2 = st.number_input("Feature 2", value=0.0)
-
-#     features = np.array([[feature1, feature2]])
-
-#     if st.button("🔍 Predict"):
-#         try:
-#             prediction = model.predict(features)
-#             st.success(f"🎯 Predicted Price: {prediction[0]}")
-#         except Exception as e:
-#             st.error(f"Prediction error: {e}")
