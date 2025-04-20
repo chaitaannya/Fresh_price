@@ -6,35 +6,38 @@ import joblib
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 from PIL import Image
-
-
-# --- Page Config ---
-st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
-import os
-import joblib
 import gdown
+import joblib
 import streamlit as st
+import os
+
+
+import gdown
+import joblib
+import streamlit as st
+import os
 
 @st.cache_resource
 def load_model():
-    MODEL_PATH = "model.pkl"
-    DRIVE_ID   = "1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
-    DOWNLOAD_URL = f"https://drive.google.com/uc?id={DRIVE_ID}"
+    file_id = '1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh'  # Your model's Google Drive file ID
+    output_path = 'model.pkl'
 
-    # 1) Check if model already exists locally
-    if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
+    # If the model file does not exist locally, download it
+    if not os.path.exists(output_path):
+        with st.spinner("Downloading model from Google Drive..."):
+            url = f"https://drive.google.com/uc?id={file_id}"
+            gdown.download(url, output_path, quiet=False)
 
-    # 2) Download from Google Drive using gdown
-    with st.spinner("📥 Downloading model from Google Drive…"):
-        gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False, fuzzy=True)
+    # Load the model from the downloaded file
+    model = joblib.load(output_path)
+    return model
 
-    return joblib.load(MODEL_PATH)
-
+# Load the model when needed
 model = load_model()
-st.success("✅ Model loaded successfully!")
+st.success("Model loaded successfully!")
 
-
+# --- Page Config ---
+# st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
 
 # --- Background Styling with Logo ---
 # def add_bg_from_local(image_file):
