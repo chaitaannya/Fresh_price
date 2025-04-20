@@ -6,6 +6,31 @@ import joblib
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 from PIL import Image
+import os
+import joblib
+import gdown
+import streamlit as st
+
+@st.cache_resource
+def load_model():
+    MODEL_PATH = "model.pkl"
+    DRIVE_ID   = "1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
+    DOWNLOAD_URL = f"https://drive.google.com/uc?id={DRIVE_ID}"
+
+    # 1) If already downloaded locally, just load:
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
+
+    # 2) Otherwise, fetch from Google Drive:
+    with st.spinner("Downloading model from Google Drive…"):
+        gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False, fuzzy=True)
+    return joblib.load(MODEL_PATH)
+
+# In your app:
+model = load_model()
+st.success("✅ Model loaded successfully!")
+
+
 
 # --- Page Config ---
 st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
@@ -103,9 +128,9 @@ with st.expander("🔍 Machine Learning Model", expanded=True):
         </div>
         """, unsafe_allow_html=True)
     except FileNotFoundError:
-        st.error("❌ ML model file not found! Please upload the model file.")
+        st.error("")
     except Exception as e:
-        st.error(f"❌ Error loading ML model: {e}")
+        st.error()
 
 # --- Load CSV Data ---
 file_path = "monthly_data.csv"
@@ -273,19 +298,3 @@ if df is not None:
         st.error("Please check your input parameters and try again.")
 
 
-import gdown
-import joblib
-import streamlit as st
-import os
-@st.cache_resource
-def load_model():
-    file_id = '1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh'  # Your model's Google Drive file ID
-    output_path = 'model.pkl'
-
-    if not os.path.exists(output_path):
-        with st.spinner("Downloading model from Google Drive..."):
-            url = f"https://drive.google.com/uc?id={file_id}"
-            gdown.download(url, output_path, quiet=False)
-
-    model = joblib.load(output_path)
-    return model
