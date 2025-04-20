@@ -6,35 +6,30 @@ import joblib
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 from PIL import Image
+
+
+# --- Page Config ---
+st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
 import os
 import joblib
 import gdown
 import streamlit as st
 
-st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
-
 @st.cache_resource
 def load_model():
-    MODEL_PATH = "model.pkl"
-    DRIVE_ID   = "1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
-    DOWNLOAD_URL = f"https://drive.google.com/uc?id={DRIVE_ID}"
+    # 1) If already downloaded, just load:
+    if os.path.exists("model.pkl"):
+        return joblib.load("model.pkl")
 
-    # 1) If already downloaded locally, just load:
-    if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
-
-    # 2) Otherwise, fetch from Google Drive:
+    # 2) Otherwise, pull from Drive:
+    drive_url = "https://drive.google.com/uc?id=1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
     with st.spinner("Downloading model from Google Drive…"):
-        gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False, fuzzy=True)
-    return joblib.load(MODEL_PATH)
+        gdown.download(drive_url, "model.pkl", quiet=False, fuzzy=True)
+    return joblib.load("model.pkl")
 
-# In your app:
 model = load_model()
-st.success("✅ Model loaded successfully!")
+st.success("✅ Model loaded!")
 
-
-
-# --- Page Config ---
 
 # --- Background Styling with Logo ---
 # def add_bg_from_local(image_file):
@@ -129,9 +124,9 @@ with st.expander("🔍 Machine Learning Model", expanded=True):
         </div>
         """, unsafe_allow_html=True)
     except FileNotFoundError:
-        st.error("")
+        st.error("❌ ML model file not found! Please upload the model file.")
     except Exception as e:
-        st.error()
+        st.error(f"❌ Error loading ML model: {e}")
 
 # --- Load CSV Data ---
 file_path = "monthly_data.csv"
