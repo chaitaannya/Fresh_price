@@ -1,3 +1,9 @@
 streamlit
 joblib
 gdown
+pandas
+numpy
+scikit-learn
+statsmodels
+seaborn
+matplotlib
