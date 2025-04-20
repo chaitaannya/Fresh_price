@@ -11,6 +11,8 @@ import joblib
 import gdown
 import streamlit as st
 
+st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
+
 @st.cache_resource
 def load_model():
     MODEL_PATH = "model.pkl"
@@ -33,7 +35,6 @@ st.success("✅ Model loaded successfully!")
 
 
 # --- Page Config ---
-st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
 
 # --- Background Styling with Logo ---
 # def add_bg_from_local(image_file):
