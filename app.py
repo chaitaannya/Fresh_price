@@ -6,30 +6,33 @@ import joblib
 import matplotlib.pyplot as plt
 from datetime import date, datetime
 from PIL import Image
-
-import os
-import joblib
 import gdown
+import joblib
 import streamlit as st
+import os
 
+st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
 @st.cache_resource
 def load_model():
-    # 1) If already downloaded, just load:
-    if os.path.exists("model.pkl"):
-        return joblib.load("model.pkl")
+    file_id = '1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh'  # Your model's Google Drive file ID
+    output_path = 'model.pkl'
 
-    # 2) Otherwise, pull from Drive:
-    drive_url = "https://drive.google.com/uc?id=1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
-    with st.spinner("Downloading model from Google Drive…"):
-        gdown.download(drive_url, "model.pkl", quiet=False, fuzzy=True)
-    return joblib.load("model.pkl")
+    # If the model file does not exist locally, download it
+    if not os.path.exists(output_path):
+        with st.spinner("Downloading model from Google Drive..."):
+            url = f"https://drive.google.com/uc?id={file_id}"
+            gdown.download(url, output_path, quiet=False)
 
+    # Load the model from the downloaded file
+    model = joblib.load(output_path)
+    return model
+
+# Load the model when needed
 model = load_model()
-st.success("✅ Model loaded!")
+st.success("Model loaded successfully!")
 
 
 # --- Page Config ---
-# st.set_page_config(page_title="Fresh Price Forecast", layout="wide", page_icon="🌾")
 
 # --- Background Styling with Logo ---
 # def add_bg_from_local(image_file):
