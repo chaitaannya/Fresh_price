@@ -17,18 +17,23 @@ import streamlit as st
 
 @st.cache_resource
 def load_model():
-    # 1) If already downloaded, just load:
-    if os.path.exists("model.pkl"):
-        return joblib.load("model.pkl")
+    MODEL_PATH = "model.pkl"
+    DRIVE_ID   = "1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
+    DOWNLOAD_URL = f"https://drive.google.com/uc?id={DRIVE_ID}"
 
-    # 2) Otherwise, pull from Drive:
-    drive_url = "https://drive.google.com/uc?id=1dwfVleT4RwL81sUVN1pX8bjTzs6TL2Uh"
-    with st.spinner("Downloading model from Google Drive…"):
-        gdown.download(drive_url, "model.pkl", quiet=False, fuzzy=True)
-    return joblib.load("model.pkl")
+    # 1) Check if model already exists locally
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
+
+    # 2) Download from Google Drive using gdown
+    with st.spinner("📥 Downloading model from Google Drive…"):
+        gdown.download(DOWNLOAD_URL, MODEL_PATH, quiet=False, fuzzy=True)
+
+    return joblib.load(MODEL_PATH)
 
 model = load_model()
-st.success("✅ Model loaded!")
+st.success("✅ Model loaded successfully!")
+
 
 
 # --- Background Styling with Logo ---
